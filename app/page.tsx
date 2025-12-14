@@ -2,6 +2,12 @@ import HeroSlider from '@/components/HeroSlider'
 import DestinationCard from '@/components/DestinationCard'
 import TravelStats from '@/components/TravelStats'
 import { MapPin, Compass, Camera, Users, ArrowRight, Globe2 } from 'lucide-react'
+import { getSmakslyBlogs, formatBlogDate, estimateReadTime } from '@/lib/smaksly-blogs'
+import Link from 'next/link'
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 // Sample destination data
 const featuredDestinations = [
@@ -73,34 +79,20 @@ const featuredDestinations = [
   },
 ]
 
-const travelStories = [
-  {
-    title: 'Chasing Northern Lights in Lapland',
-    excerpt: 'A magical winter journey through the Arctic Circle, witnessing the aurora borealis dance across the frozen sky.',
-    author: 'Emma Peterson',
-    date: '2024-12-10',
-    readTime: '8 min read',
-    image: 'https://images.unsplash.com/photo-1579033461380-adb47c3eb938?w=600&h=400&fit=crop',
-  },
-  {
-    title: 'Street Food Adventures in Bangkok',
-    excerpt: 'Navigating the bustling night markets and discovering the authentic flavors of Thai cuisine one bite at a time.',
-    author: 'Michael Chen',
-    date: '2024-12-08',
-    readTime: '6 min read',
-    image: 'https://images.unsplash.com/photo-1563492065599-3520f775eeed?w=600&h=400&fit=crop',
-  },
-  {
-    title: 'Hiking the Inca Trail to Machu Picchu',
-    excerpt: 'Four days of breathtaking mountain passes and ancient ruins culminating in the sunrise over the Lost City of the Incas.',
-    author: 'Sofia Rodriguez',
-    date: '2024-12-05',
-    readTime: '10 min read',
-    image: 'https://images.unsplash.com/photo-1587595431973-160d0d94add1?w=600&h=400&fit=crop',
-  },
-]
+export default async function Home() {
+  // Fetch blogs from Smaksly database
+  const smakslyBlogs = await getSmakslyBlogs()
 
-export default function Home() {
+  // Transform SmakslyBlog to match the component's expected format
+  const travelStories = smakslyBlogs.slice(0, 3).map(blog => ({
+    title: blog.title,
+    excerpt: blog.body.substring(0, 150).replace(/<[^>]*>/g, '') + '...',
+    author: 'Travel Writer',
+    date: formatBlogDate(blog.publish_date),
+    readTime: estimateReadTime(blog.body),
+    image: blog.image_url || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600&h=400&fit=crop',
+    slug: blog.slug,
+  }))
   return (
     <div className="w-full">
       {/* Hero Slider */}
@@ -184,38 +176,46 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {travelStories.map((story, index) => (
-              <article key={index} className="group cursor-pointer">
-                <div className="relative overflow-hidden rounded-2xl mb-4 aspect-[3/2]">
-                  <img
-                    src={story.image}
-                    alt={story.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-display text-2xl font-bold text-slate-900 group-hover:text-sky-600 transition-colors">
-                    {story.title}
-                  </h3>
-                  <p className="text-slate-600 leading-relaxed">
-                    {story.excerpt}
-                  </p>
-                  <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-sky-400 to-orange-400 rounded-full flex items-center justify-center text-white font-semibold">
-                        {story.author.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-slate-900">{story.author}</div>
-                        <div className="text-xs text-slate-500">{story.date}</div>
+            {travelStories.length > 0 ? (
+              travelStories.map((story, index) => (
+                <Link key={index} href={`/blog/${story.slug}`}>
+                  <article className="group cursor-pointer">
+                    <div className="relative overflow-hidden rounded-2xl mb-4 aspect-[3/2]">
+                      <img
+                        src={story.image}
+                        alt={story.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="font-display text-2xl font-bold text-slate-900 group-hover:text-sky-600 transition-colors">
+                        {story.title}
+                      </h3>
+                      <p className="text-slate-600 leading-relaxed">
+                        {story.excerpt}
+                      </p>
+                      <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-sky-400 to-orange-400 rounded-full flex items-center justify-center text-white font-semibold">
+                            {story.author.charAt(0)}
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-slate-900">{story.author}</div>
+                            <div className="text-xs text-slate-500">{story.date}</div>
+                          </div>
+                        </div>
+                        <div className="text-sm text-slate-500">{story.readTime}</div>
                       </div>
                     </div>
-                    <div className="text-sm text-slate-500">{story.readTime}</div>
-                  </div>
-                </div>
-              </article>
-            ))}
+                  </article>
+                </Link>
+              ))
+            ) : (
+              <div className="col-span-3 text-center py-12">
+                <p className="text-slate-600 text-lg">No travel stories available yet. Check back soon!</p>
+              </div>
+            )}
           </div>
         </div>
       </section>

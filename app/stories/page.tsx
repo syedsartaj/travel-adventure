@@ -1,100 +1,32 @@
 import Link from 'next/link';
 import { BookOpen, Clock, User, ArrowRight, Calendar } from 'lucide-react';
+import { getSmakslyBlogs, formatBlogDate, estimateReadTime } from '@/lib/smaksly-blogs';
 
-const travelStories = [
-  {
-    slug: 'northern-lights-lapland',
-    title: 'Chasing Northern Lights in Lapland',
-    excerpt: 'A magical winter journey through the Arctic Circle, witnessing the aurora borealis dance across the frozen sky. From husky sledding to ice hotels, discover the wonders of Finnish Lapland.',
-    author: 'Emma Peterson',
-    date: '2024-12-10',
-    readTime: '8 min read',
-    image: 'https://images.unsplash.com/photo-1579033461380-adb47c3eb938?w=800&h=500&fit=crop',
-    category: 'Adventure',
-    featured: true,
-  },
-  {
-    slug: 'street-food-bangkok',
-    title: 'Street Food Adventures in Bangkok',
-    excerpt: 'Navigating the bustling night markets and discovering the authentic flavors of Thai cuisine one bite at a time. A culinary journey through the streets of Thailand\'s vibrant capital.',
-    author: 'Michael Chen',
-    date: '2024-12-08',
-    readTime: '6 min read',
-    image: 'https://images.unsplash.com/photo-1563492065599-3520f775eeed?w=800&h=500&fit=crop',
-    category: 'Food & Culture',
-    featured: true,
-  },
-  {
-    slug: 'inca-trail-machu-picchu',
-    title: 'Hiking the Inca Trail to Machu Picchu',
-    excerpt: 'Four days of breathtaking mountain passes and ancient ruins culminating in the sunrise over the Lost City of the Incas. An unforgettable trek through Peru\'s sacred valley.',
-    author: 'Sofia Rodriguez',
-    date: '2024-12-05',
-    readTime: '10 min read',
-    image: 'https://images.unsplash.com/photo-1587595431973-160d0d94add1?w=800&h=500&fit=crop',
-    category: 'Hiking',
-    featured: true,
-  },
-  {
-    slug: 'safari-serengeti',
-    title: 'Safari Dreams in the Serengeti',
-    excerpt: 'Witnessing the great migration and encountering Africa\'s magnificent wildlife in their natural habitat. From lions to elephants, every moment was pure magic.',
-    author: 'David Thompson',
-    date: '2024-12-01',
-    readTime: '9 min read',
-    image: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800&h=500&fit=crop',
-    category: 'Wildlife',
-    featured: false,
-  },
-  {
-    slug: 'cherry-blossoms-tokyo',
-    title: 'Cherry Blossom Season in Tokyo',
-    excerpt: 'Experiencing hanami in Japan\'s bustling capital as the city transforms into a sea of pink petals. A guide to the best spots and cultural traditions.',
-    author: 'Yuki Tanaka',
-    date: '2024-11-28',
-    readTime: '7 min read',
-    image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&h=500&fit=crop',
-    category: 'Cultural',
-    featured: false,
-  },
-  {
-    slug: 'road-trip-iceland',
-    title: 'Ring Road: Iceland\'s Epic Road Trip',
-    excerpt: 'Circumnavigating Iceland\'s famous Route 1, from dramatic waterfalls to volcanic landscapes and glacier lagoons. The ultimate guide to an Icelandic adventure.',
-    author: 'Emma Peterson',
-    date: '2024-11-25',
-    readTime: '12 min read',
-    image: 'https://images.unsplash.com/photo-1504829857797-ddff29c27927?w=800&h=500&fit=crop',
-    category: 'Road Trip',
-    featured: false,
-  },
-  {
-    slug: 'temples-of-bali',
-    title: 'Sacred Temples of Bali',
-    excerpt: 'A spiritual journey through Bali\'s most sacred sites, from the sea temple of Tanah Lot to the mountain sanctuary of Besakih. Discover the island\'s rich Hindu heritage.',
-    author: 'Maya Wijaya',
-    date: '2024-11-20',
-    readTime: '8 min read',
-    image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&h=500&fit=crop',
-    category: 'Spiritual',
-    featured: false,
-  },
-  {
-    slug: 'greek-island-hopping',
-    title: 'Island Hopping in the Greek Cyclades',
-    excerpt: 'From the blue domes of Santorini to the windmills of Mykonos, exploring the sun-drenched islands of the Aegean Sea. A Mediterranean dream come true.',
-    author: 'Elena Papadopoulos',
-    date: '2024-11-15',
-    readTime: '9 min read',
-    image: 'https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?w=800&h=500&fit=crop',
-    category: 'Island Life',
-    featured: false,
-  },
-];
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-const categories = ['All', 'Adventure', 'Food & Culture', 'Hiking', 'Wildlife', 'Cultural', 'Road Trip', 'Spiritual', 'Island Life'];
+export default async function StoriesPage() {
+  // Fetch blogs from Smaksly database
+  const smakslyBlogs = await getSmakslyBlogs()
 
-export default function StoriesPage() {
+  // Transform SmakslyBlog to match the component's expected format
+  const travelStories = smakslyBlogs.map((blog, index) => ({
+    slug: blog.slug,
+    title: blog.title,
+    excerpt: blog.body.substring(0, 200).replace(/<[^>]*>/g, '') + '...',
+    author: 'Travel Writer',
+    date: formatBlogDate(blog.publish_date),
+    readTime: estimateReadTime(blog.body),
+    image: blog.image_url || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&h=500&fit=crop',
+    category: blog.category || 'Adventure',
+    featured: index < 3, // First 3 blogs are featured
+  }))
+
+  // Extract unique categories from blogs
+  const blogCategories = Array.from(new Set(travelStories.map(s => s.category)))
+  const categories = ['All', ...blogCategories]
+
   const featuredStories = travelStories.filter(story => story.featured);
   const recentStories = travelStories.filter(story => !story.featured);
 
@@ -142,9 +74,11 @@ export default function StoriesPage() {
       {/* Featured Stories */}
       <section className="py-16 px-6">
         <div className="max-w-7xl mx-auto">
-          <h2 className="font-display text-3xl font-bold text-slate-900 mb-8">Featured Stories</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {featuredStories.map((story, index) => (
+          {travelStories.length > 0 ? (
+            <>
+              <h2 className="font-display text-3xl font-bold text-slate-900 mb-8">Featured Stories</h2>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {featuredStories.map((story, index) => (
               <Link
                 key={story.slug}
                 href={`/blog/${story.slug}`}
@@ -184,17 +118,25 @@ export default function StoriesPage() {
                   </div>
                 </article>
               </Link>
-            ))}
-          </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-20">
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">No Travel Stories Yet</h2>
+              <p className="text-xl text-slate-600">Check back soon for amazing travel adventures!</p>
+            </div>
+          )}
         </div>
       </section>
 
       {/* Recent Stories */}
-      <section className="py-16 px-6 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="font-display text-3xl font-bold text-slate-900 mb-8">Recent Stories</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {recentStories.map((story) => (
+      {recentStories.length > 0 && (
+        <section className="py-16 px-6 bg-white">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="font-display text-3xl font-bold text-slate-900 mb-8">Recent Stories</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {recentStories.map((story) => (
               <Link key={story.slug} href={`/blog/${story.slug}`} className="group">
                 <article className="bg-slate-50 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300">
                   <div className="relative h-56 overflow-hidden">
@@ -231,10 +173,11 @@ export default function StoriesPage() {
                   </div>
                 </article>
               </Link>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CTA Section */}
       <section className="py-20 px-6 bg-gradient-to-br from-sky-500 to-orange-500 text-white">
