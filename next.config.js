@@ -8,9 +8,6 @@ const nextConfig = {
     ],
     formats: ['image/avif', 'image/webp'],
   },
-  experimental: {
-    optimizeCss: true,
-  },
   // Enable React strict mode for better development experience
   reactStrictMode: true,
   // Optimize production builds
