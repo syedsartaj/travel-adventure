@@ -1,4 +1,7 @@
 import type { Config } from 'tailwindcss'
+import typography from '@tailwindcss/typography'
+import forms from '@tailwindcss/forms'
+import aspectRatio from '@tailwindcss/aspect-ratio'
 
 const config: Config = {
   content: [
@@ -97,9 +100,9 @@ const config: Config = {
     },
   },
   plugins: [
-    require('@tailwindcss/typography'),
-    require('@tailwindcss/forms'),
-    require('@tailwindcss/aspect-ratio'),
+    typography,
+    forms,
+    aspectRatio,
   ],
 }
 
