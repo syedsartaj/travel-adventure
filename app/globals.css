@@ -140,11 +140,15 @@
 
   /* Destination Card Styles */
   .destination-card {
-    @apply relative overflow-hidden rounded-2xl shadow-lg group cursor-pointer;
+    @apply relative overflow-hidden rounded-2xl shadow-lg cursor-pointer;
   }
 
   .destination-card-image {
-    @apply w-full h-full object-cover transition-transform duration-700 group-hover:scale-110;
+    @apply w-full h-full object-cover transition-transform duration-700;
+  }
+
+  .destination-card:hover .destination-card-image {
+    @apply scale-110;
   }
 
   .destination-card-overlay {
@@ -152,7 +156,11 @@
   }
 
   .destination-card-content {
-    @apply absolute bottom-0 left-0 right-0 p-6 text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300;
+    @apply absolute bottom-0 left-0 right-0 p-6 text-white transform translate-y-4 transition-transform duration-300;
+  }
+
+  .destination-card:hover .destination-card-content {
+    @apply translate-y-0;
   }
 
   /* Badge Styles */
