@@ -284,4 +284,91 @@ export async function searchDestinations(query: string): Promise<Destination[]> 
     .toArray()
 }
 
+// CRUD Operations for Stories
+import { ObjectId } from 'mongodb'
+
+export async function getStoryById(id: string): Promise<TravelStory | null> {
+  const db = await getDatabase()
+  const stories = db.collection<TravelStory>('stories')
+  return await stories.findOne({ _id: new ObjectId(id) as any })
+}
+
+export async function createStory(story: Omit<TravelStory, '_id' | 'createdAt' | 'updatedAt' | 'views' | 'likes' | 'comments'>): Promise<{ insertedId: any }> {
+  const db = await getDatabase()
+  const stories = db.collection<TravelStory>('stories')
+  const result = await stories.insertOne({
+    ...story,
+    views: 0,
+    likes: 0,
+    comments: [],
+    createdAt: new Date(),
+    updatedAt: new Date()
+  } as TravelStory)
+  return { insertedId: result.insertedId }
+}
+
+export async function updateStory(id: string, updates: Partial<TravelStory>): Promise<{ modifiedCount: number }> {
+  const db = await getDatabase()
+  const stories = db.collection<TravelStory>('stories')
+  const result = await stories.updateOne(
+    { _id: new ObjectId(id) as any },
+    { $set: { ...updates, updatedAt: new Date() } }
+  )
+  return { modifiedCount: result.modifiedCount }
+}
+
+export async function deleteStory(id: string): Promise<{ deletedCount: number }> {
+  const db = await getDatabase()
+  const stories = db.collection<TravelStory>('stories')
+  const result = await stories.deleteOne({ _id: new ObjectId(id) as any })
+  return { deletedCount: result.deletedCount }
+}
+
+export async function getAllStories(): Promise<TravelStory[]> {
+  const db = await getDatabase()
+  const stories = db.collection<TravelStory>('stories')
+  return await stories.find({}).sort({ createdAt: -1 }).toArray()
+}
+
+// CRUD Operations for Destinations
+export async function getDestinationById(id: string): Promise<Destination | null> {
+  const db = await getDatabase()
+  const destinations = db.collection<Destination>('destinations')
+  return await destinations.findOne({ _id: new ObjectId(id) as any })
+}
+
+export async function createDestination(destination: Omit<Destination, '_id' | 'createdAt' | 'updatedAt'>): Promise<{ insertedId: any }> {
+  const db = await getDatabase()
+  const destinations = db.collection<Destination>('destinations')
+  const result = await destinations.insertOne({
+    ...destination,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  } as Destination)
+  return { insertedId: result.insertedId }
+}
+
+export async function updateDestination(id: string, updates: Partial<Destination>): Promise<{ modifiedCount: number }> {
+  const db = await getDatabase()
+  const destinations = db.collection<Destination>('destinations')
+  const result = await destinations.updateOne(
+    { _id: new ObjectId(id) as any },
+    { $set: { ...updates, updatedAt: new Date() } }
+  )
+  return { modifiedCount: result.modifiedCount }
+}
+
+export async function deleteDestination(id: string): Promise<{ deletedCount: number }> {
+  const db = await getDatabase()
+  const destinations = db.collection<Destination>('destinations')
+  const result = await destinations.deleteOne({ _id: new ObjectId(id) as any })
+  return { deletedCount: result.deletedCount }
+}
+
+export async function getAllDestinations(): Promise<Destination[]> {
+  const db = await getDatabase()
+  const destinations = db.collection<Destination>('destinations')
+  return await destinations.find({}).sort({ createdAt: -1 }).toArray()
+}
+
 export default clientPromise
